@@ -1,0 +1,18 @@
+{
+  "name": "Word+One - 英単語単語帳",
+  "short_name": "Word+One",
+  "description": "英単語を検索して単語帳に。日本語・ドイツ語訳付き。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f2eb",
+  "theme_color": "#5a6f5a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
