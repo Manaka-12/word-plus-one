@@ -1,34 +1,27 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { WordBook, SavedWord } from './types';
-import { WORDS_PER_BOOK, MAX_FREE_BOOKS } from './types';
-import { loadWordBooks, saveWordBooks, loadPremium, savePremium } from './storage';
+import { WORDS_PER_BOOK } from './types';
+import { loadWordBooks, saveWordBooks } from './storage';
 import { SearchView } from './SearchView';
 import { BookListView } from './BookListView';
 import { FlashcardView } from './FlashcardView';
 import { TableView } from './TableView';
-import { AdBanner } from './AdBanner';
 import './App.css';
 
 type Tab = 'search' | 'books' | 'flashcard' | 'table';
 
 function App() {
   const [books, setBooks] = useState<WordBook[]>(() => loadWordBooks());
-  const [premium, setPremium] = useState<boolean>(() => loadPremium());
   const [tab, setTab] = useState<Tab>('search');
 
   useEffect(() => {
     saveWordBooks(books);
   }, [books]);
 
-  useEffect(() => {
-    savePremium(premium);
-  }, [premium]);
-
   const addWord = useCallback((w: SavedWord): boolean => {
     const next = [...books];
     let target = next[next.length - 1];
     if (!target || target.words.length >= WORDS_PER_BOOK) {
-      if (!premium && next.length >= MAX_FREE_BOOKS) return false;
       target = {
         id: `book-${Date.now()}`,
         name: `単語帳 ${next.length + 1}`,
@@ -44,7 +37,7 @@ function App() {
     next[idx] = { ...target, words: [...target.words, w] };
     setBooks(next);
     return true;
-  }, [books, premium]);
+  }, [books]);
 
   const removeWord = useCallback((bookId: string, word: string) => {
     setBooks((prev) =>
@@ -56,25 +49,47 @@ function App() {
     );
   }, []);
 
+  const reorderWord = useCallback((bookId: string, fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    setBooks((prev) =>
+      prev.map((b) => {
+        if (b.id !== bookId || fromIndex < 0 || toIndex < 0 || fromIndex >= b.words.length || toIndex >= b.words.length) return b;
+        const words = [...b.words];
+        const [removed] = words.splice(fromIndex, 1);
+        words.splice(toIndex, 0, removed);
+        return { ...b, words };
+      })
+    );
+  }, []);
+
+  const moveWord = useCallback((fromBookId: string, wordIndex: number, toBookId: string) => {
+    if (fromBookId === toBookId) return;
+    setBooks((prev) => {
+      const fromBook = prev.find((b) => b.id === fromBookId);
+      const toBook = prev.find((b) => b.id === toBookId);
+      if (!fromBook || !toBook || wordIndex < 0 || wordIndex >= fromBook.words.length) return prev;
+      const word = fromBook.words[wordIndex];
+      return prev.map((b) => {
+        if (b.id === fromBookId) return { ...b, words: b.words.filter((_, i) => i !== wordIndex) };
+        if (b.id === toBookId) return { ...b, words: [...b.words, word] };
+        return b;
+      });
+    });
+  }, []);
+
+  const clearBook = useCallback((bookId: string) => {
+    setBooks((prev) =>
+      prev.map((b) => (b.id !== bookId ? b : { ...b, words: [] }))
+    );
+  }, []);
+
   const allWords = books.flatMap((b) => b.words);
 
   return (
     <div className="app">
       <header className="header">
-        <div className="header-top">
-          <h1>Word+One</h1>
-          {premium ? (
-            <span className="premium-badge">プレミアム</span>
-          ) : (
-            <button type="button" className="premium-cta" onClick={() => setPremium(true)}>
-              プレミアムで無制限・広告なし
-            </button>
-          )}
-        </div>
+        <h1>Word+One</h1>
         <p className="tagline">英単語を検索して単語帳に貯めよう。ドイツ語訳付き。</p>
-        {!premium && (
-          <p className="plan-hint">無料版は単語帳3冊まで。課金で無制限＋広告なし。</p>
-        )}
         <nav className="tabs">
           <button
             className={tab === 'search' ? 'active' : ''}
@@ -105,10 +120,18 @@ function App() {
 
       <main className="main">
         {tab === 'search' && (
-          <SearchView onAddWord={addWord} premium={premium} bookCount={books.length} />
+          <SearchView onAddWord={addWord} premium={true} bookCount={books.length} />
         )}
         {tab === 'books' && (
-          <BookListView books={books} onRemoveWord={removeWord} premium={premium} onUpgrade={() => setPremium(true)} />
+          <BookListView
+          books={books}
+          onRemoveWord={removeWord}
+          onReorderWord={reorderWord}
+          onMoveWord={moveWord}
+          onClearBook={clearBook}
+          premium={true}
+          onUpgrade={() => {}}
+        />
         )}
         {tab === 'flashcard' && (
           <FlashcardView books={books} />
@@ -117,8 +140,6 @@ function App() {
           <TableView allWords={allWords} books={books} />
         )}
       </main>
-
-      {!premium && <AdBanner />}
     </div>
   );
 }

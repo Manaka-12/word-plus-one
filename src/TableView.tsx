@@ -6,6 +6,8 @@ interface TableViewProps {
   books: WordBook[];
 }
 
+const ALL_BOOKS_ID = '__all__';
+
 function TableRowToggle({
   w,
   bookName,
@@ -45,6 +47,9 @@ function TableRowToggle({
 }
 
 export function TableView({ allWords, books }: TableViewProps) {
+  const [selectedBookId, setSelectedBookId] = useState<string>(ALL_BOOKS_ID);
+  const booksWithWords = books.filter((b) => b.words.length > 0);
+
   if (allWords.length === 0) {
     return (
       <section className="table-view">
@@ -53,20 +58,49 @@ export function TableView({ allWords, books }: TableViewProps) {
     );
   }
 
+  const showAll = selectedBookId === ALL_BOOKS_ID;
+  const selectedBook = books.find((b) => b.id === selectedBookId);
+
   return (
     <section className="table-view">
+      <div className="table-view-controls">
+        <label className="table-book-filter">
+          <span>単語帳:</span>
+          <select
+            value={selectedBookId}
+            onChange={(e) => setSelectedBookId(e.target.value)}
+          >
+            <option value={ALL_BOOKS_ID}>すべて</option>
+            {booksWithWords.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}（{b.words.length}語）</option>
+            ))}
+          </select>
+        </label>
+      </div>
       <p className="table-hint">タップで各行の詳細を開閉</p>
       <div className="table-list">
-        {allWords.map((w) => {
-          const book = books.find((b) => b.words.some((x) => x.word === w.word));
-          return (
+        {showAll ? (
+          booksWithWords.map((book) => (
+            <div key={book.id} className="table-book-group">
+              <h3 className="table-book-heading">{book.name}（{book.words.length}語）</h3>
+              {book.words.map((w) => (
+                <TableRowToggle
+                  key={`${book.id}-${w.word}-${w.addedAt}`}
+                  w={w}
+                  bookName={book.name}
+                />
+              ))}
+            </div>
+          ))
+        ) : selectedBook ? (
+          selectedBook.words.map((w) => (
             <TableRowToggle
-              key={`${w.word}-${w.addedAt}`}
+              key={`${selectedBook.id}-${w.word}-${w.addedAt}`}
               w={w}
-              bookName={book?.name ?? '—'}
+              bookName={selectedBook.name}
             />
-          );
-        })}
+          ))
+        ) : null}
       </div>
     </section>
   );
