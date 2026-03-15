@@ -91,6 +91,21 @@
 
 **注意:** AdSense の審査は「中身が少ない」「アクセスがほぼない」だと通らないことがある。単語帳としてある程度ページを充実させてから申し込むとよい。
 
+### デプロイが Failed になる場合
+
+1. **Settings → Pages の Source が「GitHub Actions」になっているか**
+   - リポジトリの **Settings** → 左の **Pages**
+   - **Build and deployment** の **Source** が **GitHub Actions** になっていないとデプロイできない。**Deploy from a branch** のままなら **Source** を **GitHub Actions** に変えて保存する。
+
+2. **Actions のログでどこで落ちているか見る**
+   - **Actions** タブ → 失敗した「Deploy to GitHub Pages」をクリック → **build** または **deploy** のジョブを開く。
+   - **Install** で失敗 → `package-lock.json` をリポジトリに含めて push する（手元で `npm install` してから `git add package-lock.json`）。
+   - **Build** で失敗 → 手元で `npm run build` が通るか確認する。通らなければエラーを直してから push。
+   - **Deploy** で失敗 → 上記のとおり Pages の Source を **GitHub Actions** にしているか再確認する。
+
+3. **ブランチ名が main か**
+   - ワークフローは `main` への push でしか動かない。別のブランチ名なら、そのブランチに push するか、`.github/workflows/deploy-pages.yml` の `branches:` を自分のブランチ名に合わせる。
+
 ## 開発
 
 ```bash
