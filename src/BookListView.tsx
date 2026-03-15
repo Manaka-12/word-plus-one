@@ -11,11 +11,9 @@ interface BookListViewProps {
 
 function WordItemToggle({
   w,
-  bookId,
   onRemove,
 }: {
   w: SavedWord;
-  bookId: string;
   onRemove: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -85,7 +83,6 @@ export function BookListView({ books, onRemoveWord, premium, onUpgrade }: BookLi
               <WordItemToggle
                 key={`${book.id}-${w.word}`}
                 w={w}
-                bookId={book.id}
                 onRemove={() => onRemoveWord(book.id, w.word)}
               />
             ))}
