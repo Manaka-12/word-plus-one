@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { WordBook, SavedWord } from './types';
 import { WORDS_PER_BOOK, MAX_FREE_BOOKS } from './types';
+import { getWordTranslation } from './wordUtils';
 
 interface BookListViewProps {
   books: WordBook[];
@@ -34,6 +35,7 @@ function WordItemToggle({
   const [open, setOpen] = useState(false);
   const [showMoveSelect, setShowMoveSelect] = useState(false);
   const otherBooks = allBooks.filter((b) => b.id !== book.id && b.words.length >= 0);
+  const { text: transText, label: transLabel } = getWordTranslation(w);
   return (
     <li className="word-item-toggle">
       <button
@@ -43,14 +45,13 @@ function WordItemToggle({
         aria-expanded={open}
       >
         <span className="word-name">{w.word}</span>
-        <span className="word-item-preview">{w.japanese ?? w.meaning.slice(0, 30)}…</span>
+        <span className="word-item-preview">{transText !== '—' ? transText.slice(0, 30) + '…' : w.meaning.slice(0, 30) + '…'}</span>
         <span className="word-item-icon" aria-hidden>▼</span>
       </button>
       {open && (
         <div className="word-item-body">
           <p className="word-item-mean">{w.meaning}</p>
-          <p className="word-item-ja"><strong>日本語:</strong> {w.japanese ?? '—'}</p>
-          <p className="word-item-de"><strong>ドイツ語:</strong> {w.german}</p>
+          <p className="word-item-translation"><strong>{transLabel}訳:</strong> {transText}</p>
           <div className="word-item-actions">
             <div className="word-item-order">
               <button type="button" className="action-btn" onClick={(e) => { e.stopPropagation(); onMoveUp(); }} disabled={index === 0} aria-label="上へ">↑</button>

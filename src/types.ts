@@ -12,11 +12,32 @@ export interface DictEntry {
 export interface SavedWord {
   word: string;
   meaning: string; // 英語の意味（要約）
-  japanese?: string; // 日本語訳（旧データ互換のため任意）
-  german: string;
+  /** 英語＋1言語の訳。選んだ言語のコード（ja, de 等） */
+  translation?: string;
+  translationLang?: string;
+  /** 旧データ互換 */
+  japanese?: string;
+  german?: string;
   phonetic?: string;
   addedAt: number;
 }
+
+/** 英語と一緒に学べる言語の一覧 */
+export const SECOND_LANGUAGES = [
+  { code: 'ja', name: '日本語' },
+  { code: 'de', name: 'ドイツ語' },
+  { code: 'fr', name: 'フランス語' },
+  { code: 'es', name: 'スペイン語' },
+  { code: 'zh', name: '中国語' },
+  { code: 'ko', name: '韓国語' },
+  { code: 'it', name: 'イタリア語' },
+  { code: 'pt', name: 'ポルトガル語' },
+  { code: 'ru', name: 'ロシア語' },
+  { code: 'ar', name: 'アラビア語' },
+] as const;
+
+export type SecondLangCode = (typeof SECOND_LANGUAGES)[number]['code'];
+export const SECOND_LANG_STORAGE_KEY = 'wordplusone-second-lang';
 
 export interface WordBook {
   id: string;

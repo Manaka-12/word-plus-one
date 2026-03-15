@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { WordBook, SavedWord } from './types';
+import { getWordTranslation } from './wordUtils';
 
 interface TableViewProps {
   allWords: SavedWord[];
@@ -16,6 +17,7 @@ function TableRowToggle({
   bookName: string;
 }) {
   const [open, setOpen] = useState(false);
+  const { text: transText, label: transLabel } = getWordTranslation(w);
   return (
     <div className="table-row-toggle">
       <button
@@ -25,7 +27,7 @@ function TableRowToggle({
         aria-expanded={open}
       >
         <span className="col-word">{w.word}</span>
-        <span className="table-row-preview">{w.japanese ?? w.meaning.slice(0, 25)}…</span>
+        <span className="table-row-preview">{transText !== '—' ? transText.slice(0, 25) + '…' : w.meaning.slice(0, 25) + '…'}</span>
         <span className="table-row-icon" aria-hidden>▼</span>
       </button>
       {open && (
@@ -33,10 +35,8 @@ function TableRowToggle({
           <dl className="table-row-dl">
             <dt>意味（英語）</dt>
             <dd>{w.meaning}</dd>
-            <dt>日本語訳</dt>
-            <dd>{w.japanese ?? '—'}</dd>
-            <dt>ドイツ語訳</dt>
-            <dd>{w.german}</dd>
+            <dt>{transLabel}訳</dt>
+            <dd>{transText}</dd>
             <dt>単語帳</dt>
             <dd>{bookName}</dd>
           </dl>

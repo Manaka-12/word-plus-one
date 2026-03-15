@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { WordBook, SavedWord } from './types';
+import type { SecondLangCode } from './types';
 import { WORDS_PER_BOOK } from './types';
-import { loadWordBooks, saveWordBooks } from './storage';
+import { loadWordBooks, saveWordBooks, loadSecondLanguage, saveSecondLanguage } from './storage';
+import { SECOND_LANGUAGES } from './types';
 import { SearchView } from './SearchView';
 import { BookListView } from './BookListView';
 import { FlashcardView } from './FlashcardView';
@@ -12,7 +14,12 @@ type Tab = 'search' | 'books' | 'flashcard' | 'table';
 
 function App() {
   const [books, setBooks] = useState<WordBook[]>(() => loadWordBooks());
+  const [secondLang, setSecondLang] = useState<SecondLangCode>(() => loadSecondLanguage());
   const [tab, setTab] = useState<Tab>('search');
+
+  useEffect(() => {
+    saveSecondLanguage(secondLang);
+  }, [secondLang]);
 
   useEffect(() => {
     saveWordBooks(books);
@@ -89,7 +96,30 @@ function App() {
     <div className="app">
       <header className="header">
         <h1>Word+One</h1>
-        <p className="tagline">英単語を検索して単語帳に貯めよう。ドイツ語訳付き。</p>
+        <p className="tagline">英単語を検索して単語帳に貯めよう。英語＋1言語で学べる。</p>
+        <div className="second-lang-select">
+          <label>
+            <span>一緒に学ぶ言語:</span>
+            <select
+              value={secondLang}
+              onChange={(e) => setSecondLang(e.target.value as SecondLangCode)}
+              aria-label="一緒に学ぶ言語"
+            >
+              {SECOND_LANGUAGES.map(({ code, name }) => (
+                <option key={code} value={code}>{name}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <details className="app-notice">
+          <summary>ご利用上の注意</summary>
+          <ul>
+            <li><strong>スマホで使うとき：</strong>ホーム画面に追加するとアプリのように開けます。iPhone（Safari）→ 共有 →「ホーム画面に追加」。Android（Chrome）→ メニュー⋮ →「ホーム画面に追加」。</li>
+            <li><strong>訳について：</strong>英語の意味は辞書API、日・独訳は自動翻訳で表示しています。正確でない場合があるため、重要な用途では辞書等でご確認ください。</li>
+            <li><strong>対応ブラウザ：</strong>Chrome / Edge / Safari / Firefox の最新版を推奨。シークレットモードでは終了時にデータが消えます。</li>
+            <li><strong>保存データ：</strong>単語は端末のブラウザ内のみに保存されます。履歴・サイトデータの削除や端末初期化で消え、復元できません。</li>
+          </ul>
+        </details>
         <nav className="tabs">
           <button
             className={tab === 'search' ? 'active' : ''}
@@ -120,7 +150,12 @@ function App() {
 
       <main className="main">
         {tab === 'search' && (
-          <SearchView onAddWord={addWord} premium={true} bookCount={books.length} />
+          <SearchView
+            onAddWord={addWord}
+            premium={true}
+            bookCount={books.length}
+            secondLang={secondLang}
+          />
         )}
         {tab === 'books' && (
           <BookListView

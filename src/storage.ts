@@ -1,5 +1,8 @@
 import type { WordBook } from './types';
-import { STORAGE_KEY, PREMIUM_STORAGE_KEY } from './types';
+import type { SecondLangCode } from './types';
+import { STORAGE_KEY, PREMIUM_STORAGE_KEY, SECOND_LANG_STORAGE_KEY, SECOND_LANGUAGES } from './types';
+
+const VALID_CODES = new Set(SECOND_LANGUAGES.map((x) => x.code));
 
 export function loadWordBooks(): WordBook[] {
   try {
@@ -26,4 +29,18 @@ export function loadPremium(): boolean {
 
 export function savePremium(premium: boolean): void {
   localStorage.setItem(PREMIUM_STORAGE_KEY, premium ? 'true' : 'false');
+}
+
+export function loadSecondLanguage(): SecondLangCode {
+  try {
+    const code = localStorage.getItem(SECOND_LANG_STORAGE_KEY);
+    if (code && VALID_CODES.has(code as SecondLangCode)) return code as SecondLangCode;
+  } catch {
+    // ignore
+  }
+  return 'de';
+}
+
+export function saveSecondLanguage(code: SecondLangCode): void {
+  localStorage.setItem(SECOND_LANG_STORAGE_KEY, code);
 }

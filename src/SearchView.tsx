@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import type { SavedWord } from './types';
-import { fetchDefinition, translateToJapanese, translateToGerman, formatMeaning, getPhonetic } from './api';
+import { fetchDefinition, translateWithFallback, formatMeaning, getPhonetic } from './api';
+import { getWordTranslation } from './wordUtils';
 
 function ResultCard({ result }: { result: SavedWord }) {
-  const [openSection, setOpenSection] = useState<'meaning' | 'ja' | 'de' | null>('meaning');
+  const [openSection, setOpenSection] = useState<'meaning' | 'translation' | null>('meaning');
+  const { text: translationText, label: translationLabel } = getWordTranslation(result);
   const sections = [
     { id: 'meaning' as const, title: '意味（英語）', body: result.meaning },
-    { id: 'ja' as const, title: '日本語訳', body: result.japanese ?? '—' },
-    { id: 'de' as const, title: 'ドイツ語訳', body: result.german },
+    { id: 'translation' as const, title: `${translationLabel}訳`, body: translationText },
   ];
-  const toggle = (id: 'meaning' | 'ja' | 'de') => {
+  const toggle = (id: 'meaning' | 'translation') => {
     setOpenSection((prev) => (prev === id ? null : id));
   };
   return (
@@ -46,9 +47,10 @@ interface SearchViewProps {
   onAddWord: (w: SavedWord) => boolean;
   premium: boolean;
   bookCount: number;
+  secondLang: import('./types').SecondLangCode;
 }
 
-export function SearchView({ onAddWord, premium, bookCount }: SearchViewProps) {
+export function SearchView({ onAddWord, premium, bookCount, secondLang }: SearchViewProps) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -72,16 +74,13 @@ export function SearchView({ onAddWord, premium, bookCount }: SearchViewProps) {
         return;
       }
       const meaning = formatMeaning(entries);
-      const [japanese, german] = await Promise.all([
-        translateToJapanese(q),
-        translateToGerman(q),
-      ]);
+      const translation = await translateWithFallback(q, secondLang);
       const phonetic = getPhonetic(entries);
       const word: SavedWord = {
         word: entries[0].word,
         meaning,
-        japanese: japanese || '—',
-        german: german || '—',
+        translation: translation || '—',
+        translationLang: secondLang,
         phonetic,
         addedAt: Date.now(),
       };

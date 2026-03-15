@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { WordBook } from './types';
+import { getWordTranslation } from './wordUtils';
 
 interface FlashcardViewProps {
   books: WordBook[];
@@ -113,12 +114,14 @@ export function FlashcardView({ books }: FlashcardViewProps) {
                 {meaningExpanded ? '折りたたむ' : '全文表示'}
               </span>
             </div>
-            <p className="card-japanese">
-              <strong>日本語:</strong> {current?.japanese ?? '—'}
-            </p>
-            <p className="card-german">
-              <strong>ドイツ語:</strong> {current?.german ?? '—'}
-            </p>
+            {current && (() => {
+              const { text, label } = getWordTranslation(current);
+              return (
+                <p className="card-translation">
+                  <strong>{label}訳:</strong> {text}
+                </p>
+              );
+            })()}
             <p className="card-hint">クリックで表に戻す</p>
           </div>
         </div>
